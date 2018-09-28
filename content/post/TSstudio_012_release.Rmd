@@ -1,7 +1,8 @@
 ---
 title: "TSstudio 0.1.2"
 author: ""
-date: "2018-09-28"
+tags: ["TSstudio", "R", "forecast", "timeseries"]
+date: "September,28, 2018"
 output: blogdown::html_page
 ---
 
