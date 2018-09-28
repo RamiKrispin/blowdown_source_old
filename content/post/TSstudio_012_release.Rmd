@@ -1,8 +1,8 @@
 ---
-title: ""
+title: "TSstudio 0.1.2"
 author: ""
 date: "9/26/2018"
-output: html_document
+output: blogdown::html_page
 ---
 
 ```{r setup, include=FALSE}
