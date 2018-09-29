@@ -2,7 +2,7 @@
 title: "TSstudio 0.1.2"
 author: ""
 tags: ["TSstudio", "R", "forecast", "timeseries"]
-date: "2015-07-23T21:13:14-05:00"
+date: "2018-09-28T21:13:14-05:00"
 output: blogdown::html_page
 ---
 
@@ -43,13 +43,13 @@ data("USgas")
 
 ts_info(USgas)
 
-# usgas_backtesting <- ts_backtesting(USgas, 
-#                                  periods = 6, # Set the number of periods in the backtesting
-#                                  window_size = 12, # Set the length of the testing set 
-#                                  h = 60, # Set the horizon of the final forecast
-#                                  plot = FALSE,
-#                                  error = "MAPE" # Set the error matrix
-#                                  )
+usgas_backtesting <- ts_backtesting(USgas,
+                                 periods = 6, # Set the number of periods in the backtesting
+                                 window_size = 12, # Set the length of the testing set
+                                 h = 60, # Set the horizon of the final forecast
+                                 plot = FALSE,
+                                 error = "MAPE" # Set the error matrix
+                                 )
 
 
 ```
@@ -58,19 +58,19 @@ By default, the model which performed the best in the testing sets, according to
 
 ```{r message=FALSE, warning=FALSE, fig.height=7, fig.width=9}
 # Plotting the results
-# usgas_backtesting$summary_plot
+usgas_backtesting$summary_plot
 ```
 
 In addition, the output of this function includes all the output from the trained models and their forecasts. For instance, you can check the residuals of the selected model:
 
 ```{r message=FALSE, warning=FALSE, fig.height=5, fig.width=9}
-# check_res(usgas_backtesting$Models_Final$auto.arima)
+check_res(usgas_backtesting$Models_Final$auto.arima)
 ```
 
 Or pull the forecast of the hybrid model:
 
 ```{r message=FALSE, warning=FALSE, fig.height=5, fig.width=9}
-# plot_forecast(usgas_backtesting$Forecast_Final$hybrid)
+plot_forecast(usgas_backtesting$Forecast_Final$hybrid)
 ```
 
 
