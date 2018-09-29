@@ -104,6 +104,13 @@ canonifyurls = true
   name = "RSS"
   pre = "<i class=\"sidebar-button-icon fa fa-lg fa-rss\"></i>"
   url = "/index.xml"
+  
+[[menu.links]]
+  weight = 3
+  identifier = "R-bloggers"
+  name = "R-bloggers"
+  pre = "<i class=\"sidebar-button-icon fa fa-lg fa-rss\"></i>"
+  url = "https://www.r-bloggers.com/"
 
 [params]
   # Customize date format use to render blog post date, categories and other
