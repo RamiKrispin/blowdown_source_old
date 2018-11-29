@@ -1,0 +1,143 @@
+---
+title: "TSstudio 0.1.3"
+author: ""
+tags: ["TSstudio", "R", "forecast", "timeseries"]
+date: "2018-09-28T21:13:14-05:00"
+output: blogdown::html_page
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(fig.width=8, fig.height=5, fig.path='Figs/')
+```
+
+I took the Thanksgiven break to push a new version (0.1.3) of the [TSstudio](https://github.com/RamiKrispin/TSstudio) package to CRAN. The new version includes an update for the `ts_backtesting` function along with two new function -  `ts_to_prophet` for converting time series objects to a [prophet](https://facebook.github.io/prophet/docs/quick_start.html#r-api) input format (i.e., `ds` and `y` columns), and `ccf_plot` for lags plot between two time series.
+
+
+```{r}
+library(TSstudio)
+packageVersion("TSstudio")
+```
+
+
+
+#### The `ts_to_prophet` function
+
+The `ts_to_prophet` function converting `ts`, `xts` and `zoo` objects into prophet input format (i.e., data frame with two columns - ds for date and y for the series values). For instance, convertig the `USgas` series to a prophet object:
+
+```{r}
+data("USgas")
+
+ts_info(USgas)
+
+USgas_prophet <- ts_to_prophet(USgas)
+
+head(USgas)
+
+head(USgas_prophet)
+```
+
+In the case of a `ts` object, where the index is not a date object, the function extracts the time component from the first observation and use it along with the frequency of the series to estimate and create the date column of the prophet data frame. For instance, in the case of a monthly series, where the time object provides only the year and the month, by default the day component of the date object will be set to 1. Alternatively, if known, you can set the date of the first observation with the `start` argument. For example, if the `USgas` series is being captured during the mid of the month (or every 15th of the month):
+
+```{r}
+USgas_prophet <- ts_to_prophet(USgas, start = as.Date("2000-01-15"))
+
+head(USgas_prophet)
+```
+
+Similarly, the function can handle `xts` and `zoo` objects:
+
+```{r}
+data("EURO_Brent")
+ts_info(EURO_Brent)
+
+head(EURO_Brent)
+
+ts_to_prophet(EURO_Brent) %>% head()
+```
+
+#### The `ccf_plot` function
+
+The second function, `ccf_plot`, provides an interactive and intuitive visualization of the cross-correlation between two time series, by plotting a series against the lags of another series and calculating the correlation between the two with the `ccf` function. For instance, let's use the function to plot the relationship between the unemployment rate and the total vehicle sales in the US:
+
+```{r}
+data("USUnRate")
+
+ts_info(USUnRate)
+
+data("USVSales")
+
+ts_info(USVSales)
+
+ccf_plot(x = USVSales, y = USUnRate)
+```
+
+
+The function automatically aligned the two series before calculating the cross-correlation values between the series and the lags of the other series. The title of each plot specifies the lag number and the cross-correlation value. The `lags` argument of the function defines the number of lags in the plot, where the use of negative lags defines the leading indicators. For example, setting the `lags` argument to -6:6 will plot the first 6 lags, the series itself and the first 6 leading lags of the series: 
+
+
+
+```{r}
+ccf_plot(x = USVSales, y = USUnRate, lags = -6:6)
+```
+
+
+#### Forecasting with backtesting and xreg
+
+The `ts_backtesting` function for training and testing multiple models (e.g., `auto.arima`, `HoltWinters`, `nnetar`, etc.) with backtesting approach, is now supporting the `xreg` component of the `auto.arima`, `nnetar` ( [forecast](https://github.com/robjhyndman/forecast) package)and their embedment in the `hybridModel`  model ( [forecastHybrid](https://github.com/ellisp/forecastHybrid) package). The use of the `xreg` component is straightforward and required two components:
+
+* The predictors - or the regressors component in a vector or matric format will be used as an input to the model `xreg` argument.  The length of this input must be aligned with the length of the input series
+* The future values of the predictors - a vector or matrix must correspond to the inputs which used as predictors, where the length of this component must be aligned to the forecast horizon (or the `h` argument of the function). This setting of this component is done with the `xreg.h` argument
+
+
+For instance, let's forecast the monthly consumption of natural gas in US in the next 5 years (or 60 months) by regressing the `USgas` series with its Fourier terms, using `auto.arima`, `nnetar` and `hybridModel` models. We will use the `fourier` function from the forecast package to generate both the inputs for the regression model (`x_reg`) and future values for the forecast itself (`x_reg.forecast`):
+
+```{r message=FALSE, warning=FALSE, fig.height=5, fig.width=9}
+# Setting the forecast horizon
+h <- 60
+
+library(forecast)
+# Creating the xreg component for the regression
+x_reg <- fourier(USgas, K = 5)
+
+# Creating the xreg component for the forecast 
+x_reg.forecast <- forecast::fourier(USgas, K = 5, h = h)
+```
+
+
+Note that the `ts_backtesting` function automatically split and aligned the `xreg` component according to the expanding window movement of the function. We will set the function to run backtesting using 6 periods/splits to train `auto.arima`, `nnetar` and `hybridModel` models, in order to examine the performance of the models over time:
+
+
+```{r}
+md <- ts_backtesting(ts.obj = USgas,
+                     error = "MAPE",
+                     models = "anh",
+                     periods = 6,
+                     h = h,
+                     xreg.h = x_reg.forecast,
+                     a.arg = list(xreg = x_reg),
+                     h.arg = list(models = "aetsfz", 
+                                  a.args = list(xreg = x_reg), 
+                                  verbose = FALSE),
+                     n.arg = list(xreg = x_reg),
+                     plot = FALSE)
+
+
+```
+
+We can now review the performance of each model using the summary plot:
+
+```{r}
+md$summary_plot
+```
+
+The summary plot provides the error distribution of each model and the plot forecasting model which performed best on the backtesting. In this case, since we set the `error` argument to `MAPE`, the function selected the `auto.arima` final forecast. Yet, the output contains the information of all the models that trained both during the backtesting and the final forecast as well. For example, you can check the residuals of the `auto.arima` model in a similar manner you would check it if the `auto.arima` would run separately: 
+
+```{r}
+check_res(md$Forecast_Final$auto.arima)
+```
+
+The plan for future releases is to expend the functionality of the `ts_backtesting` function, by adding additional models (e.g., `tslm`, `prophet`, etc.) and expend the window setting of the backtesting (adding sliding window option). 
