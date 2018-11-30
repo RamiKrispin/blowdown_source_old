@@ -16,6 +16,14 @@ knitr::opts_chunk$set(fig.width=8, fig.height=5, fig.path='Figs/')
 
 I used the Thanksgiven break to push a new update of the [TSstudio](https://github.com/RamiKrispin/TSstudio) package to CRAN (version 0.1.3). The new version includes an update for the `ts_backtesting` function along with two new function -  `ts_to_prophet` for converting time series objects to a [prophet](https://facebook.github.io/prophet/docs/quick_start.html#r-api) input format (i.e., `ds` and `y` columns), and `ccf_plot` for lags plot between two time series. The package can installed either from CRAN or from Github:
 
+```{r eval = FALSE}
+# CRAN
+install.packages("TSstudio")
+
+# Github
+# install.packages("devtools")
+devtools::install_github("RamiKrispin/TSstudio")
+```
 
 
 ```{r}
@@ -25,7 +33,7 @@ packageVersion("TSstudio")
 
 
 
-#### The `ts_to_prophet` function
+#### Converting time series object to a prophet format
 
 The `ts_to_prophet` function converting `ts`, `xts` and `zoo` objects into prophet input format (i.e., data frame with two columns - ds for date and y for the series values). For instance, convertig the `USgas` series to a prophet object:
 
@@ -60,7 +68,7 @@ head(EURO_Brent)
 ts_to_prophet(EURO_Brent) %>% head()
 ```
 
-#### The `ccf_plot` function
+#### Lags plots of two series
 
 The second function, `ccf_plot`, provides an interactive and intuitive visualization of the cross-correlation between two time series, by plotting a series against the lags of another series and calculating the correlation between the two with the `ccf` function. For instance, let's use the function to plot the relationship between the unemployment rate and the total vehicle sales in the US:
 
