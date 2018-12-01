@@ -14,7 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 knitr::opts_chunk$set(fig.width=8, fig.height=5, fig.path='Figs/')
 ```
 
-I used the Thanksgiven break to push a new update of the [TSstudio](https://github.com/RamiKrispin/TSstudio) package to CRAN (version 0.1.3). The new version includes an update for the `ts_backtesting` function along with two new function -  `ts_to_prophet` for converting time series objects to a [prophet](https://facebook.github.io/prophet/docs/quick_start.html#r-api) input format (i.e., `ds` and `y` columns), and `ccf_plot` for lags plot between two time series. The package can installed either from CRAN or from Github:
+I used the Thanksgiven break to push a new update of the [TSstudio](https://github.com/RamiKrispin/TSstudio) package to CRAN (version 0.1.3). The new version includes an update for the `ts_backtesting` function along with two new function -  `ts_to_prophet` for converting time series objects to a [prophet](https://facebook.github.io/prophet/docs/quick_start.html#r-api) input format (i.e., `ds` and `y` columns), and `ccf_plot` for lags plot between two time series. The package can be installed from either CRAN or Github:
 
 ```{r eval = FALSE}
 # CRAN
@@ -49,7 +49,7 @@ head(USgas)
 head(USgas_prophet)
 ```
 
-In the case of a `ts` object, where the index is not a date object, the function extracts the time component from the first observation and use it along with the frequency of the series to estimate and create the date column of the prophet data frame. For instance, in the case of a monthly series, where the time object provides only the year and the month, by default the day component of the date object will be set to 1. Alternatively, if known, you can set the date of the first observation with the `start` argument. For example, if the `USgas` series is being captured during the mid of the month (or every 15th of the month):
+In the case of a `ts` object, where the index is not a date object, the function extracts the time component from the first observation and use it along with the frequency of the series to estimate the date column of the prophet data frame. For instance, in the case of a monthly series, where the time object provides only the year and the month, by default the day component of the date object will be set to 1. Alternatively, if known, you can set the date of the first observation with the `start` argument. For example, if the `USgas` series is being captured during the mid of the month (or every 15th of the month):
 
 ```{r}
 USgas_prophet <- ts_to_prophet(USgas, start = as.Date("2000-01-15"))
@@ -70,7 +70,7 @@ ts_to_prophet(EURO_Brent) %>% head()
 
 #### Lags plots of two series
 
-The second function, `ccf_plot`, provides an interactive and intuitive visualization of the cross-correlation between two time series, by plotting a series against the lags of another series and calculating the correlation between the two with the `ccf` function. For instance, let's use the function to plot the relationship between the unemployment rate and the total vehicle sales in the US:
+The second function, `ccf_plot`, provides an interactive and intuitive visualization of the cross-correlation between two time series, by plotting a series against another series (and its lags) and calculating the correlation between the two with the `ccf` function. For instance, let's use the function to plot the relationship between the unemployment rate and the total vehicle sales in the US:
 
 ```{r}
 data("USUnRate")
@@ -85,7 +85,7 @@ ccf_plot(x = USVSales, y = USUnRate)
 ```
 
 
-The function automatically aligned the two series before calculating the cross-correlation values between the series and the lags of the other series. The title of each plot specifies the lag number and the cross-correlation value. The `lags` argument of the function defines the number of lags in the plot, where the use of negative lags defines the leading indicators. For example, setting the `lags` argument to -6:6 will plot the first 6 lags, the series itself and the first 6 leading lags of the series: 
+The function automatically aligned and used only the overlapping observations of the two series before calculating the cross-correlation values between the series and the lags of the second series (where the 0 lag represents the series itself, and negative lags represent the leading lags). The title of each plot specifies the lag number and the cross-correlation value. The `lags` argument of the function defines the number of lags in the plot, where the use of negative lags defines the leading indicators. For example, setting the `lags` argument to -6:6 will plot the first 6 lags, the series itself and the first 6 leading lags of the series: 
 
 
 
@@ -143,7 +143,7 @@ We can now review the performance of each model using the summary plot:
 md$summary_plot
 ```
 
-The summary plot provides the error distribution of each model and the plot forecasting model which performed best on the backtesting. In this case, since we set the `error` argument to `MAPE`, the function selected the `auto.arima` final forecast. Yet, the output contains the information of all the models that trained both during the backtesting and the final forecast as well. For example, you can check the residuals of the `auto.arima` model in a similar manner you would check it if the `auto.arima` would run separately: 
+The summary plot provides the error distribution of each model and the plot forecasting model which performed best on the backtesting. The output contains the models' performance on the backtesting (i.e., summary plot and leaderboard).  In this case, since we set the `error` argument to `MAPE`, the function selected the `auto.arima` final forecast. Yet, you can see in the plot that the error rate of the `hybrid` model is more stable compared to the `auto.arima` and it might be a better choice (the `hybrid` contains both the `auto.arima` and other models, which potentially helps to hedge the error). All the models' information available on the  `Forecast_Final` folder. For example, you can pull the `auto.arima` model and check its residuals: 
 
 ```{r}
 check_res(md$Forecast_Final$auto.arima)
